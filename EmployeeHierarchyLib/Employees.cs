@@ -1,4 +1,5 @@
-﻿using EmployeeHierarchyLib.Model;
+﻿using EmployeeHierarchyLib.Exceptions;
+using EmployeeHierarchyLib.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,7 +19,7 @@ namespace EmployeeHierarchyLib
             CheckIfAllManagersAreEmployee();//5
         }
 
-        public void CheckIfEmployeeHasMoreThanOneManager()
+        private void CheckIfEmployeeHasMoreThanOneManager()
         {
             employees.ForEach(emp =>
             {
@@ -32,7 +33,7 @@ namespace EmployeeHierarchyLib
                         {
                             if (manager != manager1)
                             {
-                                throw new Exception($"{emp.Id} has more than one manager");
+                                throw new MoreThanOneManagerException($"{emp.Id} has more than one manager");
                             }
                         }
                     }
@@ -40,7 +41,7 @@ namespace EmployeeHierarchyLib
             });
         }
 
-        public void CheckIfAllManagersAreEmployee()
+        private void CheckIfAllManagersAreEmployee()
         {
             employees.ForEach(emp =>
             {
@@ -49,13 +50,13 @@ namespace EmployeeHierarchyLib
                     var isManagerAnEmployee = employees.Any(m => m.Id == emp.ManagerId);
                     if (!isManagerAnEmployee)
                     {
-                        throw new Exception($"{emp.ManagerId} is not en employee");
+                        throw new ManagerThatIsNotEmployeeException($"{emp.ManagerId} is not en employee");
                     }
                 }
             });
         }
 
-        public void CheckForCircularRedundancy()
+        private void CheckForCircularRedundancy()
         {
             employees.ForEach(emp =>
             {
@@ -63,21 +64,21 @@ namespace EmployeeHierarchyLib
                 
                 if (managerOfActualEmployeeManager?.FirstOrDefault()?.ManagerId == emp.Id)
                 {
-                    throw new Exception($"There is a circular redundacy.{emp.Id} is reporting to {managerOfActualEmployeeManager?.FirstOrDefault()?.Id} that is also under {emp.Id}");
+                    throw new CircularReferenceException($"There is a circular redundacy.{emp.Id} is reporting to {managerOfActualEmployeeManager?.FirstOrDefault()?.Id} that is also under {emp.Id}");
                 }
             });
         }
 
-        public void CheckIfThereIsOnlyOneCEO()
+        private void CheckIfThereIsOnlyOneCEO()
         {
             var numberOfEmployeeWithoutManagers = employees.Select(m => m.ManagerId).Where(s => String.IsNullOrEmpty(s)).Count();
             if (numberOfEmployeeWithoutManagers > 1)
             {
-                throw new Exception("There are more than one employee with no manager. We are only expecting one CEO.");
+                throw new MoreThanOneCEOException("There are more than one employee with no manager. We are only expecting one CEO.");
             }
         }
 
-        public  void LoadEmployees(string csvInput)
+        private  void LoadEmployees(string csvInput)
         {
             int lineIndex = 1;
             foreach (var row in csvInput.Split(new string[] { Environment.NewLine }, StringSplitOptions.None))
@@ -106,7 +107,7 @@ namespace EmployeeHierarchyLib
                 }
                 else
                 {
-                    throw new ArgumentException($"{salary} is not a valid salary at line {lineAtIndex} in the csv string",nameof(salary));
+                    throw new InvalidSalaryException($"{salary} is not a valid salary at line {lineAtIndex} in the csv string",nameof(salary));
                 }
             }
         }
@@ -114,18 +115,21 @@ namespace EmployeeHierarchyLib
         public long GetSalaryBudget(string manager)
         {
 
-            long GetSalaries(string managerId)
+            long GetSalaries(string managerId, long initialSalary)
             {
-                long employeesSalary = default;
+                long employeesSalary = initialSalary;
                 List<Employee> employeesUnderThisManager = employees.Where(man => man.ManagerId == managerId).ToList();
 
                 foreach (var employee in employeesUnderThisManager)
                 {
-                    employeesSalary += GetSalaries(employee.Id);
+                    employeesSalary += employee.Salary;
+                    employeesSalary = GetSalaries(employee.Id, employeesSalary);
                 }
                 return employeesSalary;
             }
-            return GetSalaries(manager) + employees.FirstOrDefault(man => man.Id == manager).Salary;
+            long employeesSalaries = GetSalaries(manager, 0); 
+            var managerSalary = employees.FirstOrDefault(man => man.Id == manager).Salary;
+            return employeesSalaries + managerSalary;
         }
     }
 }

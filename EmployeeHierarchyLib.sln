@@ -9,6 +9,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleTest", "ConsoleTest\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmployeeHierarchy.Test", "EmployeeHierarchy.Test\EmployeeHierarchy.Test.csproj", "{33E191E1-1038-47FF-89AD-532865D170E3}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DLL File", "DLL File", "{CED47AA6-99BA-4950-9CD9-60971DE31B5F}"
+	ProjectSection(SolutionItems) = preProject
+		EmployeeHierarchyLib\bin\Debug\netstandard2.0\EmployeeHierarchyLib.dll = EmployeeHierarchyLib\bin\Debug\netstandard2.0\EmployeeHierarchyLib.dll
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
